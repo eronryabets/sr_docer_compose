@@ -1,0 +1,3 @@
+[submodule "services/sr_auth_api"]
+	path = services/sr_auth_api
+	url = https://github.com/eronryabets/sr_auth_api.git
