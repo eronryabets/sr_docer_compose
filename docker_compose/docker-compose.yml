@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: sr_traefik
+    command:
+      - "--api.insecure=true"  # Панель управления Traefik
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Для доступа к панели управления Traefik (необязательно)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Traefik будет отслеживать Docker контейнеры
+    networks:
+      - sr_traefik-public
+
+  nginx:
+    image: nginx:latest
+    container_name: sr_nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf  # Указан путь к конфигурации NGINX
+      - static_volume_sr_auth_api:/app/static_sr_auth_api
+      - media_volume_sr_auth_api:/app/media_sr_auth_api
+#      - static_volume_sr_service2:/app/static_sr_service2
+#      - media_volume_sr_service2:/app/media_sr_service2
+    labels:
+      - "traefik.enable=true"
+
+      # Определяем сервис один раз
+      - "traefik.http.services.nginx.loadbalancer.server.port=80"
+
+      # Маршрутизатор для auth.localhost
+      - "traefik.http.routers.nginx_sr_auth_api.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.nginx_sr_auth_api.entrypoints=web"
+      - "traefik.http.routers.nginx_sr_auth_api.service=nginx"  # Связываем с сервисом nginx
+
+      # Маршрутизатор для sr_service2.localhost
+#      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.localhost`)"
+#      - "traefik.http.routers.nginx_sr_service2.entrypoints=web"
+#      - "traefik.http.routers.nginx_sr_service2.service=nginx"  # Связываем с сервисом nginx
+    networks:
+      - sr_traefik-public
+
+  sr_auth_api:
+    build: ../services/sr_auth_api  # Указан путь к папке с проектом Django
+    container_name: sr_auth_api
+    command: gunicorn --workers 3 --bind 0.0.0.0:8000 sr_auth_api.wsgi:application
+    volumes:
+      - ../services/sr_auth_api:/app  # Монтируем проект из новой директории
+      - static_volume_sr_auth_api:/app/static  # Общий volume для статики
+      - media_volume_sr_auth_api:/app/media    # Общий volume для медиа
+    labels:
+       - "traefik.enable=false"
+    env_file:
+      - .env # Укажите путь к вашему .env файлу
+    networks:
+      - sr_traefik-public
+
+#  sr_service2:
+#    build: ../services/sr_service2
+#    container_name: sr_service2
+#    command: gunicorn --workers 3 --bind 0.0.0.0:8000 sr_service2.wsgi:application
+#    volumes:
+#      - ../services/sr_service2:/app
+#      - static_volume_sr_service2:/app/static  # Volume для статики service2
+#      - media_volume_sr_service2:/app/media    # Volume для медиа service2
+#    labels:
+#      - "traefik.enable=false"
+#    env_file:
+#      - .env # Укажите путь к вашему .env файлу
+#    networks:
+#      - sr_traefik-public
+
+  db_auth:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: db_auth
+      POSTGRES_USER: ${DATABASES_USER_AUTH}
+      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_AUTH}
+    volumes:
+      - postgres_data_sr_auth_api:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - sr_traefik-public
+
+#  db_service2:
+#    image: postgres:13
+#    environment:
+#      POSTGRES_DB: db_service2  # Новая база данных для проекта adminka2
+#      POSTGRES_USER: admin
+#      POSTGRES_PASSWORD: pwd
+#    volumes:
+#      - postgres_data_sr_service2:/var/lib/postgresql/data  # Volume для хранения данных
+#    networks:
+#      - sr_traefik-public
+
+volumes:
+  # auth_api :
+  postgres_data_sr_auth_api:
+  static_volume_sr_auth_api:    # Volume для статики проекта auth_api
+  media_volume_sr_auth_api:     # Volume для медиа проекта auth_api
+
+  # service 2 :
+#  postgres_data_sr_service2:
+#  static_volume_sr_service2: # Volume для статики проекта servcie2
+#  media_volume_sr_service2:  # Volume для медиа проекта servcie2
+
+networks:
+  sr_traefik-public:
+    external: true
