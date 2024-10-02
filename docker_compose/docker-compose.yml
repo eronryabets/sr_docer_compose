@@ -25,8 +25,10 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf  # Указан путь к конфигурации NGINX
       - static_volume_sr_auth_api:/app/static_sr_auth_api
       - media_volume_sr_auth_api:/app/media_sr_auth_api
-#      - static_volume_sr_service2:/app/static_sr_service2
-#      - media_volume_sr_service2:/app/media_sr_service2
+      - static_volume_sr_user_api:/app/static_sr_user_api
+      - media_volume_sr_user_api:/app/media_sr_user_api
+    #      - static_volume_sr_service2:/app/static_sr_service2
+    #      - media_volume_sr_service2:/app/media_sr_service2
     labels:
       - "traefik.enable=true"
 
@@ -38,10 +40,15 @@ services:
       - "traefik.http.routers.nginx_sr_auth_api.entrypoints=web"
       - "traefik.http.routers.nginx_sr_auth_api.service=nginx"  # Связываем с сервисом nginx
 
+      # Маршрутизатор для user.localhost
+      - "traefik.http.routers.nginx_sr_user_api.rule=Host(`user.localhost`)"
+      - "traefik.http.routers.nginx_sr_user_api.entrypoints=web"
+      - "traefik.http.routers.nginx_sr_user_api.service=nginx"  # Связываем с сервисом nginx
+
       # Маршрутизатор для sr_service2.localhost
-#      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.localhost`)"
-#      - "traefik.http.routers.nginx_sr_service2.entrypoints=web"
-#      - "traefik.http.routers.nginx_sr_service2.service=nginx"  # Связываем с сервисом nginx
+    #      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.localhost`)"
+    #      - "traefik.http.routers.nginx_sr_service2.entrypoints=web"
+    #      - "traefik.http.routers.nginx_sr_service2.service=nginx"  # Связываем с сервисом nginx
     networks:
       - sr_traefik-public
 
@@ -54,26 +61,41 @@ services:
       - static_volume_sr_auth_api:/app/static  # Общий volume для статики
       - media_volume_sr_auth_api:/app/media    # Общий volume для медиа
     labels:
-       - "traefik.enable=false"
+      - "traefik.enable=false"
     env_file:
       - .env # Укажите путь к вашему .env файлу
     networks:
       - sr_traefik-public
 
-#  sr_service2:
-#    build: ../services/sr_service2
-#    container_name: sr_service2
-#    command: gunicorn --workers 3 --bind 0.0.0.0:8000 sr_service2.wsgi:application
-#    volumes:
-#      - ../services/sr_service2:/app
-#      - static_volume_sr_service2:/app/static  # Volume для статики service2
-#      - media_volume_sr_service2:/app/media    # Volume для медиа service2
-#    labels:
-#      - "traefik.enable=false"
-#    env_file:
-#      - .env # Укажите путь к вашему .env файлу
-#    networks:
-#      - sr_traefik-public
+  sr_user_api:
+    build: ../services/sr_user_api
+    container_name: sr_user_api
+    command: gunicorn --workers 3 --bind 0.0.0.0:8000 sr_user_api.wsgi:application
+    volumes:
+      - ../services/sr_user_api:/app
+      - static_volume_sr_user_api:/app/static  # Volume для статики service2
+      - media_volume_sr_user_api:/app/media    # Volume для медиа service2
+    labels:
+      - "traefik.enable=false"
+    env_file:
+      - .env # Укажите путь к вашему .env файлу
+    networks:
+      - sr_traefik-public
+  
+  #  sr_service2:
+  #    build: ../services/sr_service2
+  #    container_name: sr_service2
+  #    command: gunicorn --workers 3 --bind 0.0.0.0:8000 sr_service2.wsgi:application
+  #    volumes:
+  #      - ../services/sr_service2:/app
+  #      - static_volume_sr_service2:/app/static  # Volume для статики service2
+  #      - media_volume_sr_service2:/app/media    # Volume для медиа service2
+  #    labels:
+  #      - "traefik.enable=false"
+  #    env_file:
+  #      - .env # Укажите путь к вашему .env файлу
+  #    networks:
+  #      - sr_traefik-public
 
   db_auth:
     image: postgres:13
@@ -90,13 +112,27 @@ services:
       - "5432:5432"
     networks:
       - sr_traefik-public
+  
+  db_user:
+    image: postgres:13
+    container_name: db_user
+    environment:
+      POSTGRES_DB: db_user
+      POSTGRES_USER: ${DATABASES_USER_USER_API}
+      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_USER_API}
+    volumes:
+      - postgres_data_sr_user_api:/var/lib/postgresql/data  # Volume для хранения данных
+    networks:
+      - sr_traefik-public
+
 
 #  db_service2:
 #    image: postgres:13
+#    container_name: db_service2
 #    environment:
 #      POSTGRES_DB: db_service2  # Новая база данных для проекта adminka2
-#      POSTGRES_USER: admin
-#      POSTGRES_PASSWORD: pwd
+#      POSTGRES_USER: ${DATABASES_USER_service2}
+#      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_service2}
 #    volumes:
 #      - postgres_data_sr_service2:/var/lib/postgresql/data  # Volume для хранения данных
 #    networks:
@@ -107,6 +143,12 @@ volumes:
   postgres_data_sr_auth_api:
   static_volume_sr_auth_api:    # Volume для статики проекта auth_api
   media_volume_sr_auth_api:     # Volume для медиа проекта auth_api
+
+  # sr_user_api :
+  postgres_data_sr_user_api:
+  static_volume_sr_user_api:
+  media_volume_sr_user_api:
+
 
   # service 2 :
 #  postgres_data_sr_service2:
