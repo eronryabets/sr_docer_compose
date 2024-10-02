@@ -3,4 +3,4 @@
 	url = https://github.com/eronryabets/sr_auth_api.git
 [submodule "services/sr_user_api"]
 	path = services/sr_user_api
-	url = https://github.com/eronryabets/sr_auth_api.git
+	url = https://github.com/eronryabets/sr_user_api.git
