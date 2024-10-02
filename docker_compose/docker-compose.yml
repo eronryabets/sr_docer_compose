@@ -77,6 +77,7 @@ services:
 
   db_auth:
     image: postgres:13
+    container_name: db_auth
     environment:
       POSTGRES_DB: db_auth
       POSTGRES_USER: ${DATABASES_USER_AUTH}
