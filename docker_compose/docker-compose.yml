@@ -122,6 +122,10 @@ services:
       POSTGRES_PASSWORD: ${DATABASES_PASSWORD_USER_API}
     volumes:
       - postgres_data_sr_user_api:/var/lib/postgresql/data  # Volume для хранения данных
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
     networks:
       - sr_traefik-public
 
@@ -135,6 +139,10 @@ services:
 #      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_service2}
 #    volumes:
 #      - postgres_data_sr_service2:/var/lib/postgresql/data  # Volume для хранения данных
+#     env_file:
+#      - .env
+#     ports:
+#      - "543*:5432"
 #    networks:
 #      - sr_traefik-public
 
