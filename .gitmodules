@@ -4,6 +4,3 @@
 [submodule "services/sr_user_api"]
 	path = services/sr_user_api
 	url = https://github.com/eronryabets/sr_user_api.git
-[submodule "services/smart_reader"]
-	path = services/smart_reader
-	url = https://github.com/eronryabets/smart_reader.git
