@@ -4,3 +4,6 @@
 [submodule "services/sr_user_api"]
 	path = services/sr_user_api
 	url = https://github.com/eronryabets/sr_user_api.git
+[submodule "services/frontend"]
+	path = services/frontend
+	url = https://github.com/eronryabets/frontend.git
