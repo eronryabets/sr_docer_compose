@@ -36,17 +36,17 @@ services:
       - "traefik.http.services.nginx.loadbalancer.server.port=80"
 
       # Маршрутизатор для auth.localhost
-      - "traefik.http.routers.nginx_sr_auth_api.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.nginx_sr_auth_api.rule=Host(`auth.drunar.space`)"
       - "traefik.http.routers.nginx_sr_auth_api.entrypoints=web"
       - "traefik.http.routers.nginx_sr_auth_api.service=nginx"  # Связываем с сервисом nginx
 
       # Маршрутизатор для user.localhost
-      - "traefik.http.routers.nginx_sr_user_api.rule=Host(`user.localhost`)"
+      - "traefik.http.routers.nginx_sr_user_api.rule=Host(`user.drunar.space`)"
       - "traefik.http.routers.nginx_sr_user_api.entrypoints=web"
       - "traefik.http.routers.nginx_sr_user_api.service=nginx"  # Связываем с сервисом nginx
 
       # Маршрутизатор для sr_service2.localhost
-    #      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.localhost`)"
+    #      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.drunar.space`)"
     #      - "traefik.http.routers.nginx_sr_service2.entrypoints=web"
     #      - "traefik.http.routers.nginx_sr_service2.service=nginx"  # Связываем с сервисом nginx
     networks:
