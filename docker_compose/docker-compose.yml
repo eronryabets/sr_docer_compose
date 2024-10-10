@@ -27,6 +27,8 @@ services:
       - media_volume_sr_auth_api:/app/media_sr_auth_api
       - static_volume_sr_user_api:/app/static_sr_user_api
       - media_volume_sr_user_api:/app/media_sr_user_api
+      - static_volume_text_api:/app/static_text_api
+      - media_volume_text_api:/app/media_text_api
     #      - static_volume_sr_service2:/app/static_sr_service2
     #      - media_volume_sr_service2:/app/media_sr_service2
     labels:
@@ -44,6 +46,11 @@ services:
       - "traefik.http.routers.nginx_sr_user_api.rule=Host(`user.drunar.space`)"
       - "traefik.http.routers.nginx_sr_user_api.entrypoints=web"
       - "traefik.http.routers.nginx_sr_user_api.service=nginx"  # Связываем с сервисом nginx
+
+      # Маршрутизатор для text.localhost
+      - "traefik.http.routers.nginx_text_api.rule=Host(`text.drunar.space`)"
+      - "traefik.http.routers.nginx_text_api.entrypoints=web"
+      - "traefik.http.routers.nginx_text_api.service=nginx"  # Связываем с сервисом nginx
 
       # Маршрутизатор для sr_service2.localhost
     #      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.drunar.space`)"
@@ -81,7 +88,22 @@ services:
       - .env # Укажите путь к вашему .env файлу
     networks:
       - sr_traefik-public
-  
+
+  text_api:
+    build: ../services/text_api
+    container_name: text_api
+    command: gunicorn --workers 3 --bind 0.0.0.0:8000 text_api.wsgi:application
+    volumes:
+        - ../services/text_api:/app
+        - static_volume_text_api:/app/static  # Volume для статики service2
+        - media_volume_text_api:/app/media    # Volume для медиа service2
+    labels:
+        - "traefik.enable=false"
+    env_file:
+        - .env # Укажите путь к вашему .env файлу
+    networks:
+        - sr_traefik-public
+
   #  sr_service2:
   #    build: ../services/sr_service2
   #    container_name: sr_service2
@@ -121,7 +143,7 @@ services:
       POSTGRES_USER: ${DATABASES_USER_USER_API}
       POSTGRES_PASSWORD: ${DATABASES_PASSWORD_USER_API}
     volumes:
-      - postgres_data_sr_user_api:/var/lib/postgresql/data  # Volume для хранения данных
+      - postgres_data_sr_user_api:/var/lib/postgresql/data
     env_file:
       - .env
     ports:
@@ -129,6 +151,22 @@ services:
     networks:
       - sr_traefik-public
 
+
+  db_text:
+    image: postgres:13
+    container_name: db_text
+    environment:
+      POSTGRES_DB: db_text  # Новая база данных для проекта adminka2
+      POSTGRES_USER: ${DATABASES_USER_TEXT_API}
+      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_TEXT_API}
+    volumes:
+      - postgres_data_text_api:/var/lib/postgresql/data  # Volume для хранения данных
+    env_file:
+      - .env
+    ports:
+      - "5434:5432"
+    networks:
+      - sr_traefik-public
 
 #  db_service2:
 #    image: postgres:13
@@ -139,9 +177,9 @@ services:
 #      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_service2}
 #    volumes:
 #      - postgres_data_sr_service2:/var/lib/postgresql/data  # Volume для хранения данных
-#     env_file:
+#    env_file:
 #      - .env
-#     ports:
+#    ports:
 #      - "543*:5432"
 #    networks:
 #      - sr_traefik-public
@@ -157,6 +195,10 @@ volumes:
   static_volume_sr_user_api:
   media_volume_sr_user_api:
 
+#   text_api :
+  postgres_data_text_api:
+  static_volume_text_api: # Volume для статики проекта servcie2
+  media_volume_text_api:  # Volume для медиа проекта servcie2
 
   # service 2 :
 #  postgres_data_sr_service2:
