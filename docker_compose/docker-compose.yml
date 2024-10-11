@@ -92,7 +92,7 @@ services:
   text_api:
     build: ../services/text_api
     container_name: text_api
-    command: gunicorn --workers 3 --bind 0.0.0.0:8000 text_api.wsgi:application
+    command: gunicorn --workers 3 --bind 0.0.0.0:8000 text_api.wsgi:application --timeout 600
     volumes:
         - ../services/text_api:/app
         - static_volume_text_api:/app/static  # Volume для статики service2
