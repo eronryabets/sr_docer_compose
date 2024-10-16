@@ -7,6 +7,6 @@
 [submodule "services/frontend"]
 	path = services/frontend
 	url = https://github.com/eronryabets/frontend.git
-[submodule "services/text_api"]
-	path = services/text_api
-	url = https://github.com/eronryabets/text_api.git
+[submodule "services/book_api"]
+	path = services/book_api
+	url = https://github.com/eronryabets/book_api.git
