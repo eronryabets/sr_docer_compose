@@ -10,3 +10,6 @@
 [submodule "services/book_api"]
 	path = services/book_api
 	url = https://github.com/eronryabets/book_api.git
+[submodule "services/translator_api"]
+	path = services/translator_api
+	url = https://github.com/eronryabets/translator_api.git
