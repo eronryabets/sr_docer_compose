@@ -29,6 +29,8 @@ services:
       - media_volume_sr_user_api:/app/media_sr_user_api
       - static_volume_book_api:/app/static_book_api
       - media_volume_book_api:/app/media_book_api
+      - static_volume_translator_api:/app/static_translator_api
+      - media_volume_translator_api:/app/media_translator_api
     #      - static_volume_sr_service2:/app/static_sr_service2
     #      - media_volume_sr_service2:/app/media_sr_service2
     labels:
@@ -51,8 +53,13 @@ services:
       - "traefik.http.routers.nginx_book_api.rule=Host(`book.drunar.space`)"
       - "traefik.http.routers.nginx_book_api.entrypoints=web"
       - "traefik.http.routers.nginx_book_api.service=nginx"  # Связываем с сервисом nginx
-
-      # Маршрутизатор для sr_service2.localhost
+      
+      #  Маршрутизатор для translator_api.localhost
+      - "traefik.http.routers.nginx_translator_api.rule=Host(`translator.drunar.space`)"
+      - "traefik.http.routers.nginx_translator_api.entrypoints=web"
+      - "traefik.http.routers.nginx_translator_api.service=nginx"  # Связываем с сервисом nginx
+      
+    # Маршрутизатор для sr_service2.localhost
     #      - "traefik.http.routers.nginx_sr_service2.rule=Host(`sr_service2.drunar.space`)"
     #      - "traefik.http.routers.nginx_sr_service2.entrypoints=web"
     #      - "traefik.http.routers.nginx_sr_service2.service=nginx"  # Связываем с сервисом nginx
@@ -97,6 +104,21 @@ services:
         - ../services/book_api:/app
         - static_volume_book_api:/app/static  # Volume для статики service2
         - media_volume_book_api:/app/media    # Volume для медиа service2
+    labels:
+        - "traefik.enable=false"
+    env_file:
+        - .env # Укажите путь к вашему .env файлу
+    networks:
+        - sr_traefik-public
+
+  translator_api:
+    build: ../services/translator_api
+    container_name: translator_api
+    command: gunicorn --workers 3 --bind 0.0.0.0:8000 translator_api.wsgi:application
+    volumes:
+        - ../services/translator_api:/app
+        - static_volume_translator_api:/app/static  # Volume для статики service2
+        - media_volume_translator_api:/app/media    # Volume для медиа service2
     labels:
         - "traefik.enable=false"
     env_file:
@@ -156,7 +178,7 @@ services:
     image: postgres:13
     container_name: db_book
     environment:
-      POSTGRES_DB: db_book  # Новая база данных для проекта adminka2
+      POSTGRES_DB: db_book  
       POSTGRES_USER: ${DATABASES_USER_BOOK_API}
       POSTGRES_PASSWORD: ${DATABASES_PASSWORD_BOOK_API}
     volumes:
@@ -167,6 +189,23 @@ services:
       - "5434:5432"
     networks:
       - sr_traefik-public
+
+  db_translator:
+    image: postgres:13
+    container_name: db_translator
+    environment:
+      POSTGRES_DB: db_translator  
+      POSTGRES_USER: ${DATABASES_USER_TRANSLATOR_API}
+      POSTGRES_PASSWORD: ${DATABASES_PASSWORD_TRANSLATOR_API}
+    volumes:
+      - postgres_data_translator_api:/var/lib/postgresql/data  # Volume для хранения данных
+    env_file:
+      - .env
+    ports:
+      - "5435:5432"
+    networks:
+      - sr_traefik-public
+
 
 #  db_service2:
 #    image: postgres:13
@@ -195,11 +234,16 @@ volumes:
   static_volume_sr_user_api:
   media_volume_sr_user_api:
 
-#   book_api :
+  # book_api :
   postgres_data_book_api:
-  static_volume_book_api: # Volume для статики проекта servcie2
-  media_volume_book_api:  # Volume для медиа проекта servcie2
-
+  static_volume_book_api: 
+  media_volume_book_api:  
+  
+  # translator_api :
+  postgres_data_translator_api:
+  static_volume_translator_api: 
+  media_volume_translator_api:  
+  
   # service 2 :
 #  postgres_data_sr_service2:
 #  static_volume_sr_service2: # Volume для статики проекта servcie2
