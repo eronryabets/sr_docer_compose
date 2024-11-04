@@ -126,6 +126,18 @@ services:
     networks:
         - sr_traefik-public
 
+  libretranslate:
+    image: libretranslate/libretranslate
+    container_name: libretranslate
+    restart: always
+    networks:
+      - sr_traefik-public
+    environment:
+      - LANG=en_US.UTF-8
+    # (!) Не открываем порты наружу, чтобы сервис был доступен только внутри сети!
+    # ports:
+    #   - "5000:5000"
+
   #  sr_service2:
   #    build: ../services/sr_service2
   #    container_name: sr_service2
