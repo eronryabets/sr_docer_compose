@@ -127,7 +127,7 @@ services:
         - sr_traefik-public
 
   libretranslate:
-    image: libretranslate/libretranslate
+    image: libretranslate/libretranslate:v1.6.1
     container_name: libretranslate
     restart: always
     networks:
