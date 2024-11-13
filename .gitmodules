@@ -13,6 +13,6 @@
 [submodule "services/translator_api"]
 	path = services/translator_api
 	url = https://github.com/eronryabets/translator_api.git
-[submodule "services/dictionary_api.git"]
-	path = services/dictionary_api.git
+[submodule "services/dictionary_api"]
+	path = services/dictionary_api
 	url = https://github.com/eronryabets/dictionary_api.git
